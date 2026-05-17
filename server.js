@@ -158,3 +158,21 @@ app.get("/printful-debug-variant", async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
+
+app.get("/printful-variant-direct", async (req, res) => {
+  try {
+    const response = await fetch(
+      "https://api.printful.com/store/products/433515007",
+      {
+        headers: {
+          Authorization: `Bearer ${process.env.PRINTFUL_TOKEN}`,
+        },
+      }
+    );
+
+    const data = await response.json();
+    res.json(data);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
