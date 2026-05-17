@@ -135,7 +135,7 @@ async function createPrintfulOrderFromSession(session) {
   return data;
 }
 
-app.get("/printful-debug", async (req, res) => {
+app.get("/printful-debug-variant", async (req, res) => {
   try {
     const response = await fetch(
       "https://api.printful.com/store/products/433515007",
