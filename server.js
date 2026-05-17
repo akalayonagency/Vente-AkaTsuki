@@ -140,15 +140,21 @@ app.get("/printful-debug-variant", async (req, res) => {
     const response = await fetch(
       "https://api.printful.com/store/products/433515007",
       {
+        method: "GET",
         headers: {
           Authorization: `Bearer ${process.env.PRINTFUL_TOKEN}`,
+          "Content-Type": "application/json",
         },
       }
     );
 
     const data = await response.json();
+
+    console.log(data);
+
     res.json(data);
   } catch (err) {
+    console.error(err);
     res.status(500).json({ error: err.message });
   }
 });
