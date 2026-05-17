@@ -135,15 +135,16 @@ async function createPrintfulOrderFromSession(session) {
   return data;
 }
 
-const port = process.env.PORT || 4242;
-app.listen(port, () => console.log(`AKA shop backend running on port ${port}`));
 app.get("/printful-debug", async (req, res) => {
   try {
-    const response = await fetch("https://api.printful.com/store/products", {
-      headers: {
-        Authorization: `Bearer ${process.env.PRINTFUL_TOKEN}`,
-      },
-    });
+    const response = await fetch(
+      "https://api.printful.com/store/products/433515007",
+      {
+        headers: {
+          Authorization: `Bearer ${process.env.PRINTFUL_TOKEN}`,
+        },
+      }
+    );
 
     const data = await response.json();
     res.json(data);
