@@ -1,34 +1,61 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="fr">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Vente AkaTsuki</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 20px;
-            background-color: #f5f5f5;
-        }
-        .container {
-            max-width: 800px;
-            margin: 0 auto;
-            background-color: white;
-            padding: 30px;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-        h1 {
-            color: #333;
-            text-align: center;
-        }
-    </style>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Akatsuki Organization — Boutique</title>
+  <meta name="description" content="Boutique officielle Akatsuki Organization" />
+  <style>
+    :root{--gold:#ffd46b;--orange:#ff6a00;--red:#b40000;--dark:#080305;--panel:rgba(24,5,5,.74)}
+    *{box-sizing:border-box} body{margin:0;font-family:Georgia,'Times New Roman',serif;color:#fff;background:radial-gradient(circle at 50% 10%,#451100 0,#120303 42%,#020000 100%);min-height:100vh;overflow-x:hidden}
+    body:before{content:"";position:fixed;inset:0;background:radial-gradient(circle at 50% 50%,rgba(255,105,0,.35),transparent 35%),linear-gradient(120deg,transparent,rgba(255,0,0,.14),transparent);pointer-events:none}
+    .wrap{position:relative;max-width:1120px;margin:0 auto;padding:34px 18px 70px}.hero{display:grid;grid-template-columns:1fr 1fr;gap:38px;align-items:center;min-height:88vh}
+    .badge{display:inline-block;border:1px solid rgba(255,212,107,.5);padding:8px 14px;border-radius:999px;color:var(--gold);background:rgba(0,0,0,.35);letter-spacing:.08em;text-transform:uppercase;font-size:13px}.title{font-size:clamp(42px,7vw,82px);line-height:.95;margin:22px 0 16px;text-transform:uppercase;text-shadow:0 0 18px rgba(255,95,0,.9)}
+    .subtitle{font-family:Arial,sans-serif;font-size:18px;line-height:1.65;color:#ffe9c0;max-width:590px}.card{border:1px solid rgba(255,212,107,.45);background:var(--panel);border-radius:28px;padding:24px;box-shadow:0 0 40px rgba(255,70,0,.35), inset 0 0 30px rgba(255,125,0,.08);backdrop-filter:blur(8px)}
+    .logo{width:100%;max-width:470px;display:block;margin:auto;filter:drop-shadow(0 0 26px rgba(255,95,0,.75))}.product{margin-top:-45px;position:relative}.price{font-size:46px;color:var(--gold);font-weight:bold;margin:12px 0 4px}.small{font-family:Arial,sans-serif;color:#ffd9a3}.qty{display:flex;align-items:center;gap:12px;margin:22px 0}.qty button{width:42px;height:42px;border-radius:50%;border:1px solid var(--gold);background:#180202;color:var(--gold);font-size:22px;cursor:pointer}.qty span{font-size:22px;min-width:25px;text-align:center}.buy{width:100%;border:0;border-radius:18px;padding:18px 20px;background:linear-gradient(135deg,#ffe39a,#ff7400,#a80000);color:#120000;font-weight:900;text-transform:uppercase;font-size:18px;letter-spacing:.08em;cursor:pointer;box-shadow:0 0 28px rgba(255,95,0,.55)}.buy:disabled{opacity:.6;cursor:wait}.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:24px}.feature{font-family:Arial,sans-serif;padding:16px;border-radius:18px;background:rgba(0,0,0,.35);border:1px solid rgba(255,212,107,.2)}
+    @media(max-width:850px){.hero{grid-template-columns:1fr}.product{margin-top:0}.grid{grid-template-columns:1fr}.title{font-size:46px}}
+  </style>
 </head>
 <body>
-    <div class="container">
-        <h1>Bienvenue sur Vente AkaTsuki</h1>
-        <p>Contenu à venir...</p>
-    </div>
+  <main class="wrap">
+    <section class="hero">
+      <div>
+        <span class="badge">L’ombre de l’élite</span>
+        <h1 class="title">Gourde AKA<br/>TSUKI</h1>
+        <p class="subtitle">Commande automatique : paiement sécurisé via Stripe, puis déclenchement de la commande Printful pour impression et expédition.</p>
+        <div class="grid">
+          <div class="feature">Visuel officiel agence</div><div class="feature">Paiement sécurisé</div><div class="feature">Expédition Printful</div>
+        </div>
+      </div>
+      <div class="card product">
+        <img class="logo" src="/logo.png" alt="Akatsuki Organization" />
+        <h2>Gourde Akatsuki Organization</h2>
+        <p class="small">Produit à l’effigie de l’agence — édition AKA / TSUKI.</p>
+        <div class="price">24,90 €</div>
+        <p class="small">Prix modifiable dans le fichier .env.</p>
+        <div class="qty"><button id="minus">−</button><span id="qty">1</span><button id="plus">+</button></div>
+        <button class="buy" id="buy">Commander maintenant</button>
+        <p class="small" id="status"></p>
+      </div>
+    </section>
+  </main>
+  <script>
+    // Mets ici l’URL de ton backend une fois hébergé, ex: https://aka-shop.vercel.app
+    const BACKEND_URL = '';
+    let quantity = 1;
+    const qty = document.querySelector('#qty');
+    const status = document.querySelector('#status');
+    document.querySelector('#minus').onclick = () => { quantity = Math.max(1, quantity - 1); qty.textContent = quantity; };
+    document.querySelector('#plus').onclick = () => { quantity = Math.min(10, quantity + 1); qty.textContent = quantity; };
+    document.querySelector('#buy').onclick = async (e) => {
+      e.currentTarget.disabled = true; status.textContent = 'Ouverture du paiement sécurisé...';
+      try {
+        const res = await fetch(`${BACKEND_URL}/create-checkout-session`, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ quantity }) });
+        const data = await res.json();
+        if (!data.url) throw new Error(data.error || 'Erreur paiement');
+        window.location.href = data.url;
+      } catch(err) { status.textContent = err.message; e.currentTarget.disabled = false; }
+    };
+  </script>
 </body>
 </html>
