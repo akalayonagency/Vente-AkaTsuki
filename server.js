@@ -176,3 +176,6 @@ app.get("/printful-variant-direct", async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
+app.get("/printful-variant-direct", async (req, res) => {
+  res.json({ ok: true, message: "route active" });
+});
