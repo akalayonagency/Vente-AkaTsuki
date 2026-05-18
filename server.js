@@ -99,13 +99,8 @@ app.post("/create-checkout-session", async (req, res) => {
     const session = await stripe.checkout.sessions.create({
       mode: "payment",
 
-      success_url:
-        process.env.SUCCESS_URL ||
-        `${process.env.PUBLIC_BASE_URL}/success.html`,
-
-      cancel_url:
-        process.env.CANCEL_URL ||
-        `${process.env.PUBLIC_BASE_URL}/`,
+    success_url: "https://akalayonagency.github.io/Vente-AkaTsuki/success.html",
+cancel_url: "https://aka-tsuki-organization.odoo.com/shop",
 
       billing_address_collection: "required",
 
