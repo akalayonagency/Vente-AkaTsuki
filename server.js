@@ -181,7 +181,7 @@ app.get("/printful-debug", async (req, res) => {
 app.get("/printful-variant-direct", async (req, res) => {
   try {
     const response = await fetch(
-      "https://api.printful.com/store/products/433515007",
+      "https://api.printful.com/store/products/433576852",
       {
         headers: {
           Authorization: `Bearer ${process.env.PRINTFUL_TOKEN}`,
