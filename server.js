@@ -4,13 +4,51 @@ import cors from "cors";
 import Stripe from "stripe";
 
 const app = express();
+
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || "", {
   apiVersion: "2024-06-20",
 });
 
+const PRODUCT_CATALOG = {
+  tshirt: {
+    name: "T-Shirt AkaTsuki Organization",
+    priceCents: 2290,
+    variants: [
+      5313991277, // S
+      5313991278, // M
+      5313991279, // L
+      5313991280, // XL
+      5313991281, // 2XL
+      5313991282, // 3XL
+    ],
+  },
+
+  gourde: {
+    name: "Gourde Métal 330ml AkaTsuki Organization",
+    priceCents: 3290,
+    variants: [
+      5313644654, // Unique
+    ],
+  },
+};
+
 app.use(cors({ origin: true }));
 
-// Webhook Stripe : accepte /webhook ET /webhook/stripe
+// IMPORTANT : webhook Stripe avant express.json()
+app.post("/webhook", express.raw({ type: "application/json" }), stripeWebhookHandler);
+app.post("/webhook/stripe", express.raw({ type: "application/json" }), stripeWebhookHandler);
+
+app.use(express.json());
+app.use(express.static("public"));
+
+app.get("/", (req, res) => {
+  res.send("Boutique Akatsuki backend ON");
+});
+
+app.get("/health", (req, res) => {
+  res.json({ ok: true });
+});
+
 async function stripeWebhookHandler(req, res) {
   const sig = req.headers["stripe-signature"];
 
@@ -32,7 +70,7 @@ async function stripeWebhookHandler(req, res) {
 
     try {
       await createPrintfulOrderFromSession(session);
-      console.log("Commande Printful créée pour :", session.id);
+      console.log("Commande Printful créée :", session.id);
     } catch (err) {
       console.error("Erreur commande Printful :", err.message);
       return res.status(500).send("Printful order failed");
@@ -42,54 +80,59 @@ async function stripeWebhookHandler(req, res) {
   res.json({ received: true });
 }
 
-app.post("/webhook", express.raw({ type: "application/json" }), stripeWebhookHandler);
-app.post("/webhook/stripe", express.raw({ type: "application/json" }), stripeWebhookHandler);
-
-app.use(express.json());
-app.use(express.static("public"));
-
-app.get("/", (req, res) => {
-  res.send("Boutique Akatsuki backend ON");
-});
-
-app.get("/health", (req, res) => {
-  res.json({ ok: true });
-});
-
 app.post("/create-checkout-session", async (req, res) => {
   try {
-    const { quantity = 1 } = req.body || {};
+    const { quantity = 1, productKey, syncVariantId } = req.body || {};
+
+    const product = PRODUCT_CATALOG[productKey];
     const safeQuantity = Math.max(1, Math.min(Number(quantity) || 1, 10));
+    const variantId = Number(syncVariantId);
+
+    if (!product) {
+      return res.status(400).json({ error: "Produit inconnu." });
+    }
+
+    if (!product.variants.includes(variantId)) {
+      return res.status(400).json({ error: "Variant Printful invalide." });
+    }
 
     const session = await stripe.checkout.sessions.create({
       mode: "payment",
+
       success_url:
         process.env.SUCCESS_URL ||
         `${process.env.PUBLIC_BASE_URL}/success.html`,
+
       cancel_url:
         process.env.CANCEL_URL ||
         `${process.env.PUBLIC_BASE_URL}/`,
+
       billing_address_collection: "required",
+
       shipping_address_collection: {
         allowed_countries: ["FR", "BE", "CH", "LU", "DE", "ES", "IT"],
       },
-      phone_number_collection: { enabled: true },
-      client_reference_id: `aka-gourde-${Date.now()}`,
-      metadata: {
-        product: "gourde-akatsuki-organization",
-        printful_sync_variant_id:
-          process.env.PRINTFUL_SYNC_VARIANT_ID || "",
+
+      phone_number_collection: {
+        enabled: true,
       },
+
+      client_reference_id: `${productKey}-${Date.now()}`,
+
+      metadata: {
+        productKey,
+        printful_sync_variant_id: String(variantId),
+        quantity: String(safeQuantity),
+      },
+
       line_items: [
         {
           quantity: safeQuantity,
           price_data: {
-            currency: process.env.PRODUCT_CURRENCY || "eur",
-            unit_amount: Number(process.env.PRODUCT_PRICE_CENTS || 2490),
+            currency: "eur",
+            unit_amount: product.priceCents,
             product_data: {
-              name: "Gourde Akatsuki Organization",
-              description: "Gourde officielle AKA / TSUKI",
-              images: [`${process.env.PUBLIC_BASE_URL}/logo.png`],
+              name: product.name,
             },
           },
         },
@@ -105,11 +148,20 @@ app.post("/create-checkout-session", async (req, res) => {
 
 async function createPrintfulOrderFromSession(session) {
   const token = process.env.PRINTFUL_TOKEN;
-  const syncVariantId = Number(process.env.PRINTFUL_SYNC_VARIANT_ID);
 
-  if (!token) throw new Error("PRINTFUL_TOKEN missing");
+  const syncVariantId = Number(session.metadata?.printful_sync_variant_id);
+  const quantity = Number(session.metadata?.quantity || 1);
+
+  if (!token) {
+    throw new Error("PRINTFUL_TOKEN missing");
+  }
+
   if (!syncVariantId) {
-    throw new Error("PRINTFUL_SYNC_VARIANT_ID missing or not numeric");
+    throw new Error("syncVariantId missing");
+  }
+
+  if (!quantity) {
+    throw new Error("quantity missing");
   }
 
   const customer = session.customer_details || {};
@@ -128,12 +180,14 @@ async function createPrintfulOrderFromSession(session) {
       email: customer.email,
       phone: customer.phone || "",
     },
+
     items: [
       {
         sync_variant_id: syncVariantId,
-        quantity: 1,
+        quantity,
       },
     ],
+
     retail_costs: {
       currency: (session.currency || "eur").toUpperCase(),
       subtotal: ((session.amount_subtotal || 0) / 100).toFixed(2),
@@ -141,7 +195,7 @@ async function createPrintfulOrderFromSession(session) {
     },
   };
 
-  const response = await fetch("https://api.printful.com/orders", {
+  const response = await fetch("https://api.printful.com/orders?confirm=true", {
     method: "POST",
     headers: {
       Authorization: `Bearer ${token}`,
@@ -161,7 +215,7 @@ async function createPrintfulOrderFromSession(session) {
   return data;
 }
 
-// Debug produit Printful
+// Debug : liste des produits Printful
 app.get("/printful-debug", async (req, res) => {
   try {
     const response = await fetch("https://api.printful.com/store/products", {
@@ -177,11 +231,30 @@ app.get("/printful-debug", async (req, res) => {
   }
 });
 
-// Debug variant Printful
-app.get("/printful-variant-direct", async (req, res) => {
+// Debug : détail du T-shirt
+app.get("/printful-debug-tshirt", async (req, res) => {
   try {
     const response = await fetch(
       "https://api.printful.com/store/products/433576852",
+      {
+        headers: {
+          Authorization: `Bearer ${process.env.PRINTFUL_TOKEN}`,
+        },
+      }
+    );
+
+    const data = await response.json();
+    res.json(data);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Debug : détail de la gourde
+app.get("/printful-debug-gourde", async (req, res) => {
+  try {
+    const response = await fetch(
+      "https://api.printful.com/store/products/433515007",
       {
         headers: {
           Authorization: `Bearer ${process.env.PRINTFUL_TOKEN}`,
@@ -201,4 +274,3 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Serveur lancé sur le port ${PORT}`);
 });
-const API_URL = "https://vente-akatsuki.onrender.com";
