@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Commande validée</title>
+
+  <style>
+    body{
+      margin:0;
+      min-height:100vh;
+      display:flex;
+      justify-content:center;
+      align-items:center;
+      background:#050000;
+      font-family:Arial,sans-serif;
+      overflow:hidden;
+      color:white;
+    }
+
+    .bg{
+      position:fixed;
+      inset:0;
+      background:
+      radial-gradient(circle at center,
+      rgba(255,80,0,.35),
+      transparent 45%),
+      linear-gradient(180deg,#1a0000,#050000);
+    }
+
+    .card{
+      position:relative;
+      z-index:2;
+      width:min(92%,650px);
+      background:rgba(15,0,0,.82);
+      border:1px solid rgba(255,180,80,.3);
+      border-radius:30px;
+      padding:50px 35px;
+      text-align:center;
+      backdrop-filter:blur(10px);
+      box-shadow:
+      0 0 50px rgba(255,80,0,.35),
+      inset 0 0 30px rgba(255,120,0,.08);
+    }
+
+    h1{
+      font-size:48px;
+      margin:0 0 20px;
+      color:#ffd27a;
+      text-shadow:0 0 20px rgba(255,120,0,.7);
+    }
+
+    p{
+      font-size:18px;
+      line-height:1.7;
+      color:#ffe6c7;
+    }
+
+    .btn{
+      margin-top:30px;
+      display:inline-block;
+      padding:16px 30px;
+      border-radius:18px;
+      text-decoration:none;
+      font-weight:bold;
+      color:#140000;
+      background:linear-gradient(135deg,#ffd27a,#ff6600);
+      box-shadow:0 0 25px rgba(255,100,0,.4);
+      transition:.25s;
+    }
+
+    .btn:hover{
+      transform:translateY(-3px);
+    }
+
+    .circle{
+      position:absolute;
+      width:500px;
+      height:500px;
+      border-radius:50%;
+      background:radial-gradient(circle,
+      rgba(255,90,0,.25),
+      transparent 70%);
+      z-index:0;
+      animation:pulse 5s infinite;
+    }
+
+    @keyframes pulse{
+      0%{transform:scale(1);}
+      50%{transform:scale(1.1);}
+      100%{transform:scale(1);}
+    }
+  </style>
+</head>
+
+<body>
+
+<div class="bg"></div>
+<div class="circle"></div>
+
+<div class="card">
+  <h1>Commande validée</h1>
+
+  <p>
+    Merci pour votre commande AkaTsuki Organization.<br><br>
+    Votre paiement a été confirmé et votre produit
+    part automatiquement en production.
+  </p>
+
+<a href="https://aka-tsuki-organization.odoo.com/shop" class="btn">
+  Retour à la boutique
+</a>
+</div>
+
+</body>
+</html>
