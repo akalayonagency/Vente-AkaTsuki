@@ -13,53 +13,36 @@ const PRODUCT_CATALOG = {
   casquette: {
     name: "Casquette AkaTsuki Organization",
     priceCents: 1990,
-    variants: [5314638516, 5318044313],
   },
 
   sweatshirt: {
     name: "Pull AkaTsuki Organization",
     priceCents: 3290,
-    variants: [
-      5314630805, 5314630806, 5314630807, 5314630808,
-      5314630809, 5314630810, 5314630811, 5314630812,
-      5318047646, 5318047647, 5318047648, 5318047649,
-      5318047650, 5318047651, 5318047652, 5318047653,
-    ],
   },
 
   tshirt: {
     name: "T-Shirt AkaTsuki Organization",
     priceCents: 2090,
-    variants: [
-      5313991277, 5313991278, 5313991279,
-      5313991280, 5313991281, 5313991282,
-      5318049010, 5318049011, 5318049012,
-      5318049013, 5318049014, 5318049015,
-    ],
   },
 
   gourde: {
     name: "Gourde Métal AkaTsuki",
     priceCents: 2990,
-    variants: [5313644654, 5318050131],
   },
 
   mug: {
     name: "Mug AkaTsuki Organization",
     priceCents: 1490,
-    variants: [5314630690],
   },
 
   coaster: {
     name: "Sous-verre AkaTsuki",
     priceCents: 1190,
-    variants: [5314630704],
   },
 
   magnet: {
     name: "Magnet AkaTsuki",
     priceCents: 1390,
-    variants: [5314630686],
   },
 };
 
@@ -90,6 +73,8 @@ app.get("/health", (req, res) => {
 
 app.post("/create-checkout-session", async (req, res) => {
   try {
+    console.log("BODY REÇU :", JSON.stringify(req.body, null, 2));
+
     const { cart } = req.body || {};
 
     if (!Array.isArray(cart) || cart.length === 0) {
@@ -102,12 +87,19 @@ app.post("/create-checkout-session", async (req, res) => {
       const syncVariantId = Number(item.syncVariantId);
       const quantity = Math.max(1, Math.min(Number(item.quantity) || 1, 10));
 
+      console.log("CHECK ITEM :", {
+        productKey,
+        syncVariantId,
+        quantity,
+        productFound: !!product,
+      });
+
       if (!product) {
         throw new Error(`Produit inconnu : ${productKey}`);
       }
 
-      if (!product.variants.includes(syncVariantId)) {
-        throw new Error(`Variant Printful invalide : ${syncVariantId}`);
+      if (!syncVariantId) {
+        throw new Error(`syncVariantId invalide : ${syncVariantId}`);
       }
 
       return {
@@ -165,6 +157,7 @@ app.post("/create-checkout-session", async (req, res) => {
     res.json({ url: session.url });
   } catch (err) {
     console.error("Erreur Stripe :", err.message);
+
     res.status(500).json({
       error: err.message || "Impossible de créer le paiement.",
     });
@@ -252,6 +245,8 @@ async function createPrintfulOrderFromSession(session) {
     },
   };
 
+  console.log("PRINTFUL ORDER PAYLOAD :", JSON.stringify(orderPayload, null, 2));
+
   const response = await fetch("https://api.printful.com/orders?confirm=true", {
     method: "POST",
     headers: {
@@ -279,42 +274,6 @@ app.get("/printful-debug", async (req, res) => {
         Authorization: `Bearer ${process.env.PRINTFUL_TOKEN}`,
       },
     });
-
-    const data = await response.json();
-    res.json(data);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
-app.get("/printful-debug-tshirt", async (req, res) => {
-  try {
-    const response = await fetch(
-      "https://api.printful.com/store/products/433576852",
-      {
-        headers: {
-          Authorization: `Bearer ${process.env.PRINTFUL_TOKEN}`,
-        },
-      }
-    );
-
-    const data = await response.json();
-    res.json(data);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
-app.get("/printful-debug-gourde", async (req, res) => {
-  try {
-    const response = await fetch(
-      "https://api.printful.com/store/products/433515007",
-      {
-        headers: {
-          Authorization: `Bearer ${process.env.PRINTFUL_TOKEN}`,
-        },
-      }
-    );
 
     const data = await response.json();
     res.json(data);
@@ -378,6 +337,4 @@ const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, () => {
   console.log(`Serveur lancé sur le port ${PORT}`);
-});
-  }
 });
