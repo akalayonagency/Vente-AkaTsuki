@@ -269,3 +269,66 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Serveur lancé sur le port ${PORT}`);
 });
+app.get("/printful-all-variants", async (req, res) => {
+  try {
+
+    const response = await fetch(
+      "https://api.printful.com/store/products",
+      {
+        headers: {
+          Authorization: `Bearer ${process.env.PRINTFUL_TOKEN}`,
+        },
+      }
+    );
+
+    const data = await response.json();
+
+    const products = data.result;
+
+    let finalData = [];
+
+    for (const product of products) {
+
+      const detailsResponse = await fetch(
+        `https://api.printful.com/store/products/${product.id}`,
+        {
+          headers: {
+            Authorization: `Bearer ${process.env.PRINTFUL_TOKEN}`,
+          },
+        }
+      );
+
+      const details = await detailsResponse.json();
+
+      const variants = details.result.sync_variants;
+
+      variants.forEach((variant) => {
+
+        finalData.push({
+          product_name: product.name,
+          sync_product_id: product.id,
+          sync_variant_id: variant.id,
+          variant_id: variant.variant_id,
+          color: variant.color,
+          size: variant.size,
+          retail_price: variant.retail_price,
+          sku: variant.sku,
+          preview: variant.product.image,
+        });
+
+      });
+
+    }
+
+    res.json(finalData);
+
+  } catch (error) {
+
+    console.error(error);
+
+    res.status(500).json({
+      error: error.message,
+    });
+
+  }
+});
