@@ -10,25 +10,62 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || "", {
 });
 
 const PRODUCT_CATALOG = {
+  casquette: {
+    name: "Casquette AkaTsuki Organization",
+    priceCents: 2000,
+    variants: [5314638516],
+  },
+
+  sweatshirt: {
+    name: "Pull AkaTsuki Organization",
+    priceCents: 3490,
+    variants: [
+      5314630805,
+      5314630806,
+      5314630807,
+      5314630808,
+      5314630809,
+      5314630810,
+      5314630811,
+      5314630812,
+    ],
+  },
+
+  coaster: {
+    name: "Sous-verre AkaTsuki",
+    priceCents: 890,
+    variants: [5314630704],
+  },
+
+  mug: {
+    name: "Mug AkaTsuki Organization",
+    priceCents: 1490,
+    variants: [5314630690],
+  },
+
+  magnet: {
+    name: "Magnet AkaTsuki",
+    priceCents: 690,
+    variants: [5314630686],
+  },
+
   tshirt: {
     name: "T-Shirt AkaTsuki Organization",
     priceCents: 2290,
     variants: [
-      5313991277, // S
-      5313991278, // M
-      5313991279, // L
-      5313991280, // XL
-      5313991281, // 2XL
-      5313991282, // 3XL
+      5313991277,
+      5313991278,
+      5313991279,
+      5313991280,
+      5313991281,
+      5313991282,
     ],
   },
 
   gourde: {
     name: "Gourde Métal 330ml AkaTsuki Organization",
     priceCents: 3290,
-    variants: [
-      5313644654, // Unique
-    ],
+    variants: [5313644654],
   },
 };
 
