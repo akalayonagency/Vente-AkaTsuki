@@ -12,60 +12,88 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || "", {
 const PRODUCT_CATALOG = {
   casquette: {
     name: "Casquette AkaTsuki Organization",
-    priceCents: 2000,
-    variants: [5314638516],
+    priceCents: 1990,
+    variants: [
+      5314638516, // White
+      5318044313, // Dark Navy
+    ],
   },
 
   sweatshirt: {
     name: "Pull AkaTsuki Organization",
     priceCents: 3290,
     variants: [
-      5314630805,
-      5314630806,
-      5314630807,
-      5314630808,
-      5314630809,
-      5314630810,
-      5314630811,
-      5314630812,
+      5314630805, // Black S
+      5314630806, // Black M
+      5314630807, // Black L
+      5314630808, // Black XL
+      5314630809, // Black 2XL
+      5314630810, // Black 3XL
+      5314630811, // Black 4XL
+      5314630812, // Black 5XL
+
+      5318047646, // White S
+      5318047647, // White M
+      5318047648, // White L
+      5318047649, // White XL
+      5318047650, // White 2XL
+      5318047651, // White 3XL
+      5318047652, // White 4XL
+      5318047653, // White 5XL
     ],
   },
 
   coaster: {
     name: "Sous-verre AkaTsuki",
     priceCents: 1190,
-    variants: [5314630704],
+    variants: [
+      5314630704,
+    ],
   },
 
   mug: {
     name: "Mug AkaTsuki Organization",
     priceCents: 1490,
-    variants: [5314630690],
+    variants: [
+      5314630690,
+    ],
   },
 
   magnet: {
     name: "Magnet AkaTsuki",
     priceCents: 1390,
-    variants: [5314630686],
+    variants: [
+      5314630686,
+    ],
   },
 
   tshirt: {
     name: "T-Shirt AkaTsuki Organization",
     priceCents: 2090,
     variants: [
-      5313991277,
-      5313991278,
-      5313991279,
-      5313991280,
-      5313991281,
-      5313991282,
+      5313991277, // White S
+      5313991278, // White M
+      5313991279, // White L
+      5313991280, // White XL
+      5313991281, // White 2XL
+      5313991282, // White 3XL
+
+      5318049010, // Black S
+      5318049011, // Black M
+      5318049012, // Black L
+      5318049013, // Black XL
+      5318049014, // Black 2XL
+      5318049015, // Black 3XL
     ],
   },
 
   gourde: {
     name: "Gourde Métal 330ml AkaTsuki Organization",
     priceCents: 2990,
-    variants: [5313644654],
+    variants: [
+      5313644654, // Black
+      5318050131, // White
+    ],
   },
 };
 
