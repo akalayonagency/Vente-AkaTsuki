@@ -18,7 +18,7 @@ const PRODUCT_CATALOG = {
 
   sweatshirt: {
     name: "Pull AkaTsuki Organization",
-    priceCents: 3490,
+    priceCents: 3290,
     variants: [
       5314630805,
       5314630806,
@@ -33,7 +33,7 @@ const PRODUCT_CATALOG = {
 
   coaster: {
     name: "Sous-verre AkaTsuki",
-    priceCents: 890,
+    priceCents: 1190,
     variants: [5314630704],
   },
 
@@ -45,13 +45,13 @@ const PRODUCT_CATALOG = {
 
   magnet: {
     name: "Magnet AkaTsuki",
-    priceCents: 690,
+    priceCents: 1390,
     variants: [5314630686],
   },
 
   tshirt: {
     name: "T-Shirt AkaTsuki Organization",
-    priceCents: 2290,
+    priceCents: 2090,
     variants: [
       5313991277,
       5313991278,
@@ -64,7 +64,7 @@ const PRODUCT_CATALOG = {
 
   gourde: {
     name: "Gourde Métal 330ml AkaTsuki Organization",
-    priceCents: 3290,
+    priceCents: 2990,
     variants: [5313644654],
   },
 };
