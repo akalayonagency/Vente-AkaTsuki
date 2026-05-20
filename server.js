@@ -12,96 +12,70 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || "", {
 const PRODUCT_CATALOG = {
   casquette: {
     name: "Casquette AkaTsuki Organization",
-    priceCents: 1990,
-    variants: [
-      5314638516, // White
-      5318044313, // Dark Navy
-    ],
+    priceCents: 2000,
+    variants: [5314638516, 5318044313],
   },
 
   sweatshirt: {
     name: "Pull AkaTsuki Organization",
-    priceCents: 3290,
+    priceCents: 3490,
     variants: [
-      5314630805, // Black S
-      5314630806, // Black M
-      5314630807, // Black L
-      5314630808, // Black XL
-      5314630809, // Black 2XL
-      5314630810, // Black 3XL
-      5314630811, // Black 4XL
-      5314630812, // Black 5XL
-
-      5318047646, // White S
-      5318047647, // White M
-      5318047648, // White L
-      5318047649, // White XL
-      5318047650, // White 2XL
-      5318047651, // White 3XL
-      5318047652, // White 4XL
-      5318047653, // White 5XL
-    ],
-  },
-
-  coaster: {
-    name: "Sous-verre AkaTsuki",
-    priceCents: 1190,
-    variants: [
-      5314630704,
-    ],
-  },
-
-  mug: {
-    name: "Mug AkaTsuki Organization",
-    priceCents: 1490,
-    variants: [
-      5314630690,
-    ],
-  },
-
-  magnet: {
-    name: "Magnet AkaTsuki",
-    priceCents: 1390,
-    variants: [
-      5314630686,
+      5314630805, 5314630806, 5314630807, 5314630808,
+      5314630809, 5314630810, 5314630811, 5314630812,
+      5318047646, 5318047647, 5318047648, 5318047649,
+      5318047650, 5318047651, 5318047652, 5318047653,
     ],
   },
 
   tshirt: {
     name: "T-Shirt AkaTsuki Organization",
-    priceCents: 2090,
+    priceCents: 2290,
     variants: [
-      5313991277, // White S
-      5313991278, // White M
-      5313991279, // White L
-      5313991280, // White XL
-      5313991281, // White 2XL
-      5313991282, // White 3XL
-
-      5318049010, // Black S
-      5318049011, // Black M
-      5318049012, // Black L
-      5318049013, // Black XL
-      5318049014, // Black 2XL
-      5318049015, // Black 3XL
+      5313991277, 5313991278, 5313991279,
+      5313991280, 5313991281, 5313991282,
+      5318049010, 5318049011, 5318049012,
+      5318049013, 5318049014, 5318049015,
     ],
   },
 
   gourde: {
-    name: "Gourde Métal 330ml AkaTsuki Organization",
-    priceCents: 2990,
-    variants: [
-      5313644654, // Black
-      5318050131, // White
-    ],
+    name: "Gourde Métal AkaTsuki",
+    priceCents: 3290,
+    variants: [5313644654, 5318050131],
+  },
+
+  mug: {
+    name: "Mug AkaTsuki Organization",
+    priceCents: 1490,
+    variants: [5314630690],
+  },
+
+  coaster: {
+    name: "Sous-verre AkaTsuki",
+    priceCents: 890,
+    variants: [5314630704],
+  },
+
+  magnet: {
+    name: "Magnet AkaTsuki",
+    priceCents: 690,
+    variants: [5314630686],
   },
 };
 
 app.use(cors({ origin: true }));
 
-// IMPORTANT : webhook Stripe avant express.json()
-app.post("/webhook", express.raw({ type: "application/json" }), stripeWebhookHandler);
-app.post("/webhook/stripe", express.raw({ type: "application/json" }), stripeWebhookHandler);
+app.post(
+  "/webhook",
+  express.raw({ type: "application/json" }),
+  stripeWebhookHandler
+);
+
+app.post(
+  "/webhook/stripe",
+  express.raw({ type: "application/json" }),
+  stripeWebhookHandler
+);
 
 app.use(express.json());
 app.use(express.static("public"));
@@ -112,6 +86,89 @@ app.get("/", (req, res) => {
 
 app.get("/health", (req, res) => {
   res.json({ ok: true });
+});
+
+app.post("/create-checkout-session", async (req, res) => {
+  try {
+    const { cart } = req.body || {};
+
+    if (!Array.isArray(cart) || cart.length === 0) {
+      return res.status(400).json({ error: "Panier vide." });
+    }
+
+    const safeCart = cart.map((item) => {
+      const productKey = item.productKey;
+      const product = PRODUCT_CATALOG[productKey];
+      const syncVariantId = Number(item.syncVariantId);
+      const quantity = Math.max(1, Math.min(Number(item.quantity) || 1, 10));
+
+      if (!product) {
+        throw new Error(`Produit inconnu : ${productKey}`);
+      }
+
+      if (!product.variants.includes(syncVariantId)) {
+        throw new Error(`Variant Printful invalide : ${syncVariantId}`);
+      }
+
+      return {
+        productKey,
+        syncVariantId,
+        quantity,
+        name: product.name,
+        priceCents: product.priceCents,
+      };
+    });
+
+    const line_items = safeCart.map((item) => ({
+      quantity: item.quantity,
+      price_data: {
+        currency: "eur",
+        unit_amount: item.priceCents,
+        product_data: {
+          name: item.name,
+        },
+      },
+    }));
+
+    const session = await stripe.checkout.sessions.create({
+      mode: "payment",
+
+      success_url:
+        "https://akalayonagency.github.io/Vente-AkaTsuki-1/success.html",
+      cancel_url: "https://aka-tsuki-organization.odoo.com/shop",
+
+      billing_address_collection: "required",
+
+      shipping_address_collection: {
+        allowed_countries: ["FR", "BE", "CH", "LU", "DE", "ES", "IT"],
+      },
+
+      phone_number_collection: {
+        enabled: true,
+      },
+
+      client_reference_id: `cart-${Date.now()}`,
+
+      metadata: {
+        cart: JSON.stringify(
+          safeCart.map((item) => ({
+            productKey: item.productKey,
+            syncVariantId: item.syncVariantId,
+            quantity: item.quantity,
+          }))
+        ),
+      },
+
+      line_items,
+    });
+
+    res.json({ url: session.url });
+  } catch (err) {
+    console.error("Erreur Stripe :", err.message);
+    res.status(500).json({
+      error: err.message || "Impossible de créer le paiement.",
+    });
+  }
 });
 
 async function stripeWebhookHandler(req, res) {
@@ -145,84 +202,29 @@ async function stripeWebhookHandler(req, res) {
   res.json({ received: true });
 }
 
-app.post("/create-checkout-session", async (req, res) => {
-  try {
-    const { quantity = 1, productKey, syncVariantId } = req.body || {};
-
-    const product = PRODUCT_CATALOG[productKey];
-    const safeQuantity = Math.max(1, Math.min(Number(quantity) || 1, 10));
-    const variantId = Number(syncVariantId);
-
-    if (!product) {
-      return res.status(400).json({ error: "Produit inconnu." });
-    }
-
-    if (!product.variants.includes(variantId)) {
-      return res.status(400).json({ error: "Variant Printful invalide." });
-    }
-
-    const session = await stripe.checkout.sessions.create({
-      mode: "payment",
-
-    success_url: "https://akalayonagency.github.io/Vente-AkaTsuki-1/success.html",
-cancel_url: "https://aka-tsuki-organization.odoo.com/shop",
-
-      billing_address_collection: "required",
-
-      shipping_address_collection: {
-        allowed_countries: ["FR", "BE", "CH", "LU", "DE", "ES", "IT"],
-      },
-
-      phone_number_collection: {
-        enabled: true,
-      },
-
-      client_reference_id: `${productKey}-${Date.now()}`,
-
-      metadata: {
-        productKey,
-        printful_sync_variant_id: String(variantId),
-        quantity: String(safeQuantity),
-      },
-
-      line_items: [
-        {
-          quantity: safeQuantity,
-          price_data: {
-            currency: "eur",
-            unit_amount: product.priceCents,
-            product_data: {
-              name: product.name,
-            },
-          },
-        },
-      ],
-    });
-
-    res.json({ url: session.url });
-  } catch (err) {
-    console.error("Erreur Stripe :", err.message);
-    res.status(500).json({ error: "Impossible de créer le paiement." });
-  }
-});
-
 async function createPrintfulOrderFromSession(session) {
   const token = process.env.PRINTFUL_TOKEN;
-
-  const syncVariantId = Number(session.metadata?.printful_sync_variant_id);
-  const quantity = Number(session.metadata?.quantity || 1);
 
   if (!token) {
     throw new Error("PRINTFUL_TOKEN missing");
   }
 
-  if (!syncVariantId) {
-    throw new Error("syncVariantId missing");
+  const rawCart = session.metadata?.cart;
+
+  if (!rawCart) {
+    throw new Error("Cart metadata missing");
   }
 
-  if (!quantity) {
-    throw new Error("quantity missing");
+  const cart = JSON.parse(rawCart);
+
+  if (!Array.isArray(cart) || cart.length === 0) {
+    throw new Error("Cart invalid");
   }
+
+  const items = cart.map((item) => ({
+    sync_variant_id: Number(item.syncVariantId),
+    quantity: Number(item.quantity),
+  }));
 
   const customer = session.customer_details || {};
   const shipping = session.shipping_details?.address || customer.address || {};
@@ -241,12 +243,7 @@ async function createPrintfulOrderFromSession(session) {
       phone: customer.phone || "",
     },
 
-    items: [
-      {
-        sync_variant_id: syncVariantId,
-        quantity,
-      },
-    ],
+    items,
 
     retail_costs: {
       currency: (session.currency || "eur").toUpperCase(),
@@ -275,7 +272,6 @@ async function createPrintfulOrderFromSession(session) {
   return data;
 }
 
-// Debug : liste des produits Printful
 app.get("/printful-debug", async (req, res) => {
   try {
     const response = await fetch("https://api.printful.com/store/products", {
@@ -291,7 +287,6 @@ app.get("/printful-debug", async (req, res) => {
   }
 });
 
-// Debug : détail du T-shirt
 app.get("/printful-debug-tshirt", async (req, res) => {
   try {
     const response = await fetch(
@@ -310,7 +305,6 @@ app.get("/printful-debug-tshirt", async (req, res) => {
   }
 });
 
-// Debug : détail de la gourde
 app.get("/printful-debug-gourde", async (req, res) => {
   try {
     const response = await fetch(
@@ -329,31 +323,20 @@ app.get("/printful-debug-gourde", async (req, res) => {
   }
 });
 
-const PORT = process.env.PORT || 3000;
-
-app.listen(PORT, () => {
-  console.log(`Serveur lancé sur le port ${PORT}`);
-});
 app.get("/printful-all-variants", async (req, res) => {
   try {
-
-    const response = await fetch(
-      "https://api.printful.com/store/products",
-      {
-        headers: {
-          Authorization: `Bearer ${process.env.PRINTFUL_TOKEN}`,
-        },
-      }
-    );
+    const response = await fetch("https://api.printful.com/store/products", {
+      headers: {
+        Authorization: `Bearer ${process.env.PRINTFUL_TOKEN}`,
+      },
+    });
 
     const data = await response.json();
+    const products = data.result || [];
 
-    const products = data.result;
-
-    let finalData = [];
+    const finalData = [];
 
     for (const product of products) {
-
       const detailsResponse = await fetch(
         `https://api.printful.com/store/products/${product.id}`,
         {
@@ -364,11 +347,9 @@ app.get("/printful-all-variants", async (req, res) => {
       );
 
       const details = await detailsResponse.json();
-
-      const variants = details.result.sync_variants;
+      const variants = details.result?.sync_variants || [];
 
       variants.forEach((variant) => {
-
         finalData.push({
           product_name: product.name,
           sync_product_id: product.id,
@@ -378,22 +359,25 @@ app.get("/printful-all-variants", async (req, res) => {
           size: variant.size,
           retail_price: variant.retail_price,
           sku: variant.sku,
-          preview: variant.product.image,
+          preview: variant.product?.image,
         });
-
       });
-
     }
 
     res.json(finalData);
-
   } catch (error) {
-
     console.error(error);
 
     res.status(500).json({
       error: error.message,
     });
+  }
+});
 
+const PORT = process.env.PORT || 3000;
+
+app.listen(PORT, () => {
+  console.log(`Serveur lancé sur le port ${PORT}`);
+});
   }
 });
