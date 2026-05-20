@@ -12,13 +12,13 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || "", {
 const PRODUCT_CATALOG = {
   casquette: {
     name: "Casquette AkaTsuki Organization",
-    priceCents: 2000,
+    priceCents: 1990,
     variants: [5314638516, 5318044313],
   },
 
   sweatshirt: {
     name: "Pull AkaTsuki Organization",
-    priceCents: 3490,
+    priceCents: 3290,
     variants: [
       5314630805, 5314630806, 5314630807, 5314630808,
       5314630809, 5314630810, 5314630811, 5314630812,
@@ -29,7 +29,7 @@ const PRODUCT_CATALOG = {
 
   tshirt: {
     name: "T-Shirt AkaTsuki Organization",
-    priceCents: 2290,
+    priceCents: 2090,
     variants: [
       5313991277, 5313991278, 5313991279,
       5313991280, 5313991281, 5313991282,
@@ -40,7 +40,7 @@ const PRODUCT_CATALOG = {
 
   gourde: {
     name: "Gourde Métal AkaTsuki",
-    priceCents: 3290,
+    priceCents: 2990,
     variants: [5313644654, 5318050131],
   },
 
@@ -52,13 +52,13 @@ const PRODUCT_CATALOG = {
 
   coaster: {
     name: "Sous-verre AkaTsuki",
-    priceCents: 890,
+    priceCents: 1190,
     variants: [5314630704],
   },
 
   magnet: {
     name: "Magnet AkaTsuki",
-    priceCents: 690,
+    priceCents: 1390,
     variants: [5314630686],
   },
 };
